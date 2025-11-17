@@ -21,18 +21,21 @@ model = load_model()
 
 uploaded_file = st.file_uploader("Selecione uma imagem...", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
-    img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="Imagem enviada", use_column_width=True)
+if uploaded_file:
+    placeholder = st.empty()
 
-    img_resized = img.resize((224, 224))
-    img_array = np.array(img_resized, dtype=np.float32)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)
+    with placeholder.container():
+        img = Image.open(uploaded_file).convert("RGB")
+        st.image(img, caption="Imagem enviada", use_column_width=True)
 
-    preds = model.predict(img_array)
-    results = decode_predictions(preds, top=3)[0]
+        img_resized = img.resize((224, 224))
+        img_array = np.array(img_resized, dtype=np.float32)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = preprocess_input(img_array)
 
-    st.subheader("🔍 Resultados:")
-    for _, label, prob in results:
-        st.write(f"{label} — {round(prob * 100, 2)}%")
+        preds = model.predict(img_array)
+        results = decode_predictions(preds, top=3)[0]
+
+        st.subheader("🔍 Resultados:")
+        for _, label, prob in results:
+            st.write(f"{label} — {round(prob * 100, 2)}%")
