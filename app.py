@@ -10,7 +10,7 @@ from tensorflow.keras.applications.mobilenet_v2 import (
 
 st.set_page_config(page_title="Classificador de Imagens IA")
 
-st.title("🧠 Classificador de Imagens com IA")
+st.title("Classificador de Imagens com IA")
 st.write("Envie uma imagem para que o modelo MobileNetV2 faça a classificação.")
 
 @st.cache_resource
