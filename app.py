@@ -33,9 +33,10 @@ def preprocess_image(img: Image.Image):
     extrema = img.getextrema()  
     if extrema[0] > 50 and extrema[1] > 200:
         img = ImageOps.invert(img)
-    img = img.resize((28,28), Image.ANTIALIAS)
+    img = img.resize((28, 28), Image.Resampling.LANCZOS)
+
     arr = np.array(img).astype("float32") / 255.0
-    arr = arr.reshape(1,28,28,1)
+    arr = arr.reshape(1, 28, 28, 1)
     return arr, img
 
 if use_example:
@@ -78,4 +79,3 @@ else:
             st.write(f"Classe {i}: {p:.4f}")
     else:
         st.info("Envie um arquivo ou clique em 'Testar com imagem de exemplo do MNIST'.")
-
