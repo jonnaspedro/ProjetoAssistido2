@@ -1,44 +1,101 @@
+import os
+import io
 import streamlit as st
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import tensorflow as tf
+from tensorflow.keras.models import load_model
 
-# ================================
-# Configuração da página
-# ================================
-st.set_page_config(page_title="Classificador MNIST", page_icon="🧠")
+st.set_page_config(page_title="Classificador MNIST - Streamlit", layout="centered")
 
-st.title("🧠 Classificador de Dígitos MNIST")
-st.write("Envie uma imagem 28x28 (preta e branca) para ser classificada pelo modelo treinado.")
+st.title("Classificador MNIST")
+st.markdown(
+    "Envie uma imagem do dígito (28×28 ou maior) — o app redimensiona e normaliza automaticamente."
+)
 
-# ================================
-# Carregar modelo
-# ================================
+MODEL_PATH = "model/final_CNN_model.h5"
+
 @st.cache_resource
-def load_model():
-    model = tf.keras.models.load_model("final_CNN_model.h5")
+def get_model(path=MODEL_PATH):
+    if not os.path.exists(path):
+        return None
+    model = load_model(path)
     return model
 
-model = load_model()
+model = get_model()
 
-# ================================
-# Input de imagem do usuário
-# ================================
-uploaded_file = st.file_uploader("Envie uma imagem:", type=["png", "jpg", "jpeg"])
+st.sidebar.header("Instruções")
+st.sidebar.write(
+    """
+- O modelo esperado em: `model/final_CNN_model.h5`  
+- Se não estiver, coloque o arquivo nessa pasta antes de subir ao Streamlit Cloud.  
+- No Colab: `model.save('/content/final_CNN_model.h5')` e depois `from google.colab import files; files.download('/content/final_CNN_model.h5')`
+"""
+)
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("L")  # Converte para preto e branco
-    st.image(image, caption="Imagem enviada", width=200)
+# Upload
+uploaded = st.file_uploader("Envie uma imagem (png/jpg/jpeg) ou arraste aqui", type=["png","jpg","jpeg"])
+use_example = st.button("Testar com imagem de exemplo do MNIST")
 
-    # Preprocessamento
-    img = image.resize((28, 28))
-    img_array = np.array(img).astype("float32") / 255.0
-    img_array = img_array.reshape(1, 28, 28, 1)
+def preprocess_image(img: Image.Image):
+    img = img.convert("L")  
+    extrema = img.getextrema()  
+    if extrema[0] > 50 and extrema[1] > 200:
+        img = ImageOps.invert(img)
+    img = img.resize((28,28), Image.ANTIALIAS)
+    arr = np.array(img).astype("float32") / 255.0
+    arr = arr.reshape(1,28,28,1)
+    return arr, img
 
-    # Predição
-    prediction = model.predict(img_array)
-    digit = np.argmax(prediction)
+if model is None:
+    st.warning(f"Modelo não encontrado em `{MODEL_PATH}`.")
+    st.info("Salve o modelo em `model/final_CNN_model.h5` e re-submeta o app.")
+    st.write("---")
+    st.write("Se você estiver no Colab, salve e baixe com:")
+    st.code(
+        "model.save('/content/final_CNN_model.h5')\nfrom google.colab import files\nfiles.download('/content/final_CNN_model.h5')",
+        language="python",
+    )
+    st.stop()
 
-    st.subheader(f"🔢 Dígito identificado: **{digit}**")
+if use_example:
+    (xtr, ytr), (xte, yte) = tf.keras.datasets.mnist.load_data()
+    sample_img = Image.fromarray(xte[0])
+    arr, preview = preprocess_image(sample_img)
+    st.subheader("Exemplo do MNIST (conjunto de teste)")
+    st.image(preview, width=150)
+    st.write(f"Rótulo verdadeiro: **{int(yte[0])}**")
+    probs = model.predict(arr)[0]
+    pred = int(np.argmax(probs))
+    st.success(f"Predição: **{pred}**")
+    st.write("Probabilidades por classe:")
+    st.bar_chart(probs)
+else:
+    if uploaded is not None:
+        try:
+            image = Image.open(io.BytesIO(uploaded.read()))
+        except Exception as e:
+            st.error("Erro ao abrir a imagem. Tente outro arquivo.")
+            st.stop()
 
-    st.bar_chart(prediction[0])
+        st.subheader("Imagem original")
+        st.image(image, width=240)
+
+        arr, preview = preprocess_image(image)
+        st.subheader("Pré-processamento (28×28, grayscale)")
+        st.image(preview, width=160)
+
+        probs = model.predict(arr)[0]
+        pred = int(np.argmax(probs))
+
+        st.success(f"Predição: **{pred}**")
+        st.write("Probabilidades por classe:")
+        st.bar_chart(probs)
+
+        st.write("---")
+        st.write("Probabilidades detalhadas:")
+        for i, p in enumerate(probs):
+            st.write(f"Classe {i}: {p:.4f}")
+    else:
+        st.info("Envie um arquivo ou clique em 'Testar com imagem de exemplo do MNIST'.")
+
