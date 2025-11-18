@@ -80,9 +80,7 @@ else:
 
         st.success(f"Predição: **{pred}**")
         st.write("Probabilidades por classe:")
-        import pandas as pd
-            df = pd.DataFrame({"Probabilidade": probs}, index=[f"Classe {i}" for i in range(10)])
-            st.bar_chart(df)
+        st.bar_chart(probs)
 
         st.write("---")
         st.write("Probabilidades detalhadas:")
