@@ -35,14 +35,18 @@ use_example = st.button("Testar com imagem de exemplo do MNIST")
 
 def preprocess_image(img: Image.Image):
     img = img.convert("L")  
-    extrema = img.getextrema()  
-    if extrema[0] > 50 and extrema[1] > 200:
-        img = ImageOps.invert(img)
-    img = img.resize((28, 28), Image.Resampling.LANCZOS)
 
-    arr = np.array(img).astype("float32") / 255.0
+    if np.mean(img) > 128:
+        img = ImageOps.invert(img)
+        
+    img = img.resize((20, 20), Image.Resampling.LANCZOS)
+
+    new_img = Image.new("L", (28, 28), color=0)
+    new_img.paste(img, ((28 - 20) // 2, (28 - 20) // 2))
+
+    arr = np.array(new_img).astype("float32") / 255.0
     arr = arr.reshape(1, 28, 28, 1)
-    return arr, img
+    return arr, new_img
 
 if use_example:
     (xtr, ytr), (xte, yte) = tf.keras.datasets.mnist.load_data()
