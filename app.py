@@ -24,15 +24,6 @@ def get_model(path=MODEL_PATH):
 
 model = get_model()
 
-st.sidebar.header("Instruções")
-st.sidebar.write(
-    """
-- O modelo esperado em: `model/final_CNN_model.h5`  
-- Se não estiver, coloque o arquivo nessa pasta antes de subir ao Streamlit Cloud.  
-- No Colab: `model.save('/content/final_CNN_model.h5')` e depois `from google.colab import files; files.download('/content/final_CNN_model.h5')`
-"""
-)
-
 # Upload
 uploaded = st.file_uploader("Envie uma imagem (png/jpg/jpeg) ou arraste aqui", type=["png","jpg","jpeg"])
 use_example = st.button("Testar com imagem de exemplo do MNIST")
@@ -46,17 +37,6 @@ def preprocess_image(img: Image.Image):
     arr = np.array(img).astype("float32") / 255.0
     arr = arr.reshape(1,28,28,1)
     return arr, img
-
-if model is None:
-    st.warning(f"Modelo não encontrado em `{MODEL_PATH}`.")
-    st.info("Salve o modelo em `model/final_CNN_model.h5` e re-submeta o app.")
-    st.write("---")
-    st.write("Se você estiver no Colab, salve e baixe com:")
-    st.code(
-        "model.save('/content/final_CNN_model.h5')\nfrom google.colab import files\nfiles.download('/content/final_CNN_model.h5')",
-        language="python",
-    )
-    st.stop()
 
 if use_example:
     (xtr, ytr), (xte, yte) = tf.keras.datasets.mnist.load_data()
