@@ -13,13 +13,13 @@ st.markdown(
     "Envie uma imagem do dígito (28×28 ou maior) — o app redimensiona e normaliza automaticamente."
 )
 
-MODEL_PATH = "model/final_CNN_model.h5"
+MODEL_PATH = "model/final_CNN_model.keras"
 
 @st.cache_resource
 def get_model(path=MODEL_PATH):
     if not os.path.exists(path):
         return None
-    model = load_model(path)
+    model = load_model(path, compile=False) 
     return model
 
 model = get_model()
