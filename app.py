@@ -1,33 +1,44 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-import requests
-import base64
+import tensorflow as tf
 
-st.set_page_config(page_title="Classificador de Imagens IA")
+# ================================
+# Configuração da página
+# ================================
+st.set_page_config(page_title="Classificador MNIST", page_icon="🧠")
 
-st.title("🧠 Classificador de Imagens IA")
-st.write("Usando o modelo MobileNetV2 hospedado na Hugging Face.")
+st.title("🧠 Classificador de Dígitos MNIST")
+st.write("Envie uma imagem 28x28 (preta e branca) para ser classificada pelo modelo treinado.")
 
-API_URL = "https://api-inference.huggingface.co/models/google/mobilenet_v2_1.0_224"
+# ================================
+# Carregar modelo
+# ================================
+@st.cache_resource
+def load_model():
+    model = tf.keras.models.load_model("final_CNN_model.h5")
+    return model
 
-headers = {"Authorization": "Bearer hf_123456789"} 
+model = load_model()
 
-def classify_image(img):
-    buffered = st.runtime.memory_upload(img, "temp.jpg")
-    with open(buffered, "rb") as f:
-        data = f.read()
-    response = requests.post(API_URL, headers=headers, data=data)
-    return response.json()
+# ================================
+# Input de imagem do usuário
+# ================================
+uploaded_file = st.file_uploader("Envie uma imagem:", type=["png", "jpg", "jpeg"])
 
-arquivo = st.file_uploader("Envie uma imagem", type=["jpg", "jpeg", "png"])
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("L")  # Converte para preto e branco
+    st.image(image, caption="Imagem enviada", width=200)
 
-if arquivo:
-    img = Image.open(arquivo).convert("RGB")
-    st.image(img, use_column_width=True)
+    # Preprocessamento
+    img = image.resize((28, 28))
+    img_array = np.array(img).astype("float32") / 255.0
+    img_array = img_array.reshape(1, 28, 28, 1)
 
-    resultados = classify_image(arquivo)
+    # Predição
+    prediction = model.predict(img_array)
+    digit = np.argmax(prediction)
 
-    st.subheader("Resultado:")
-    for item in resultados:
-        st.write(f"{item['label']} — {round(item['score']*100, 2)}%")
+    st.subheader(f"🔢 Dígito identificado: **{digit}**")
+
+    st.bar_chart(prediction[0])
