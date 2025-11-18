@@ -1,4 +1,5 @@
 streamlit
-tensorflow
+tensorflow>=2.10
 numpy
 Pillow
+scikit-learn
