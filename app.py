@@ -24,6 +24,11 @@ def get_model(path=MODEL_PATH):
 
 model = get_model()
 
+st.write("DEBUG: Modelo carregado?", model is not None)
+
+if model is None:
+    st.error("❌ O arquivo final_CNN_model.h5 NÃO FOI ENCONTRADO no mesmo diretório do app.py.")
+    st.stop()
 # Upload
 uploaded = st.file_uploader("Envie uma imagem (png/jpg/jpeg) ou arraste aqui", type=["png","jpg","jpeg"])
 use_example = st.button("Testar com imagem de exemplo do MNIST")
