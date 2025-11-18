@@ -1,5 +1,3 @@
-import logging
-logging.basicConfig(level=logging.INFO)
 import os
 import io
 import streamlit as st
@@ -26,16 +24,12 @@ def get_model(path=MODEL_PATH):
 
 model = get_model()
 
-st.write("DEBUG - Arquivos encontrados na pasta raíz:", os.listdir("."))
-st.write("DEBUG - Arquivos encontrados na pasta model/:", os.listdir("model"))
-
 if model is None:
     st.error("❌ Erro: O modelo NÃO foi carregado. Verifique se o arquivo final_CNN_model.h5 está dentro de /model.")
     st.stop()
 else:
     st.success("Modelo carregado com sucesso!")
 
-# Upload
 uploaded = st.file_uploader("Envie uma imagem (png/jpg/jpeg) ou arraste aqui", type=["png","jpg","jpeg"])
 use_example = st.button("Testar com imagem de exemplo do MNIST")
 
