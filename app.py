@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import os
 import io
 import streamlit as st
